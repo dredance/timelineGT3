@@ -1,0 +1,118 @@
+// oś X
+.tick text {
+    font-size: 0.7em;
+    font-weight: 500;
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.849);
+}
+.xAxis, .xAxis2{
+    color: rgb(131, 130, 130);
+    stroke-width:2.0;
+}
+.arrowOsX1, .arrowOsX2{
+    fill:rgb(138, 134, 134);
+    stroke:rgb(138, 134, 134);
+    stroke-width:0.7;
+}
+
+// GRADIENT
+.stop-left {
+    stop-color: rgba(138, 134, 134, 0.1); 
+}
+.stop-right {
+    stop-color:  rgba(88, 87, 87, 0.4); 
+}
+
+
+
+// OKRES
+.okres {
+    stroke:rgba(255, 17, 0, 0.4);
+    stroke-width:2;
+    fill: none;
+}
+.okres1 {
+    stroke:#07070731;
+    stroke-width:2;
+    fill: none;
+}
+.label_okres {
+    text-anchor: end;
+    font-weight: bold;
+    font-style: italic;
+    fill: rgb(253, 62, 15);
+    font-size: 0.75em;
+}
+
+
+
+// GANTT
+.plan_bar_zakres {
+    fill:none;
+    //fill:url(#hashZakres);
+    stroke: rgba(0, 0, 0, 0.117);
+    stroke-linecap: butt;
+    stroke-width: 1;
+}
+
+.plan_bar_wykonanie {
+    fill:url(#mainGradient);
+    // fill: rgb(255, 117, 83);
+    z-index: 20;
+}
+
+.plan_label_wykonanie {
+    font-size: 0.5em;
+    fill: rgba(0, 0, 0, 0.345);
+    font-weight: bold;
+}
+.bar_zakres {
+    fill:url(#hashZakres);
+    stroke: rgba(0,0,0,0.2);
+    stroke-linecap: butt;
+    stroke-width: 1.2;
+}
+
+.bar_wykonanie {
+    fill:url(#mainGradient);
+    // fill: rgb(255, 117, 83);
+    z-index: 20;
+}
+
+.label_wykonanie {
+    font-size: 0.5em;
+    //fill: rgb(0, 0, 0);
+    font-weight: bold;
+}
+
+
+
+
+
+
+.box_label{
+    stroke:rgb(35, 13, 97);
+    stroke-width:1;
+    fill: none;
+}
+
+.bar_opoznienie {
+    fill: url(#hashOpoznienie);
+    stroke:  rgba(85, 4, 4, 0.3);
+    // stroke-dasharray: 3;
+    stroke-linecap: butt;
+    stroke-width: 1;
+}
+.label_opoznienie {
+    text-anchor: middle;
+    font-weight: bold;
+    fill: rgb(17, 1, 1);
+    font-size: 0.5em;
+}
+
+
+.label_opis {
+
+    font-weight: bold;
+    font-size: 0.5em;
+}

@@ -1,0 +1,237 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Task name",
+            "name": "category",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Period",
+            "name": "period",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Start project",
+            "name": "start_prj",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "End project",
+            "name": "end_prj",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Group by",
+            "name": "group_name",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Start plan",
+            "name": "start_plan",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "End plan",
+            "name": "end_plan",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Start current",
+            "name": "start_curr",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "End current",
+            "name": "end_curr",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Value plan",
+            "name": "value_plan",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Value forecast",
+            "name": "value_fcst",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Real progress",
+            "name": "pct_real",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Planned progress",
+            "name": "pct_plan",
+            "kind": "Measure"
+        }
+    ],
+    "objects": {
+        "dataPoint": {
+            "properties": {
+                "defaultColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showAllDataPoints": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fillRule": {
+                    "type": {
+                        "fill": {}
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "categorical": {
+                "categories": {
+                    "for": {
+                        "in": "category"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {}
+                    }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "bind": {
+                                "to": "period"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "start_prj"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "end_prj"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "group_name"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "start_plan"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "end_plan"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "start_curr"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "end_curr"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "value_plan"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "value_fcst"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "pct_real"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "pct_plan"
+                            }
+                        }
+                    ]
+                }
+            },
+            "conditions": [
+                {
+                    "period": {
+                        "max": 1
+                    },
+                    "start_prj": {
+                        "max": 1
+                    },
+                    "end_prj": {
+                        "max": 1
+                    },
+                    "group_name": {
+                        "max": 1
+                    },
+                    "start_curr": {
+                        "max": 1
+                    },
+                    "start_plan": {
+                        "max": 1
+                    },
+                    "end_curr": {
+                        "max": 1
+                    },
+                    "end_plan": {
+                        "max": 1
+                    },
+                    "value_plan": {
+                        "max": 1
+                    },
+                    "value_fcst": {
+                        "max": 1
+                    },
+                    "pct_real": {
+                        "max": 1
+                    },
+                    "pct_plan": {
+                        "max": 1
+                    }
+                }
+            ]
+        }
+    ],
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": true
+        },
+        "roles": [
+            "Tooltips"
+        ]
+    }
+}
