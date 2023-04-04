@@ -54,6 +54,8 @@ export class Visual implements IVisual {
     //private settings: VisualSettings;
     private data: VData
 
+    private formatCurrency: any
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host
         this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
@@ -61,7 +63,7 @@ export class Visual implements IVisual {
         this.target = options.element;
         this.sm = this.host.createSelectionManager()
         this.margins = {top: 0, bottom: 20, right: 20, left: 20};
-
+        this.formatCurrency = format("($.2f")
 
         if (document) {
             this.svg = select(this.target).append('svg')
@@ -165,7 +167,7 @@ export class Visual implements IVisual {
         this.dAxisY()
 
         //gantt
-        this.gantt()  
+
         this.drawBarCurrency()
 
         
@@ -237,8 +239,8 @@ export class Visual implements IVisual {
             ;
 
         // STRZAŁKI DLA OSI X
-        symbols([rangeEnd], this.symbol, 'M 0 0 12 6 0 12 3 6', 'arrowOsX', 
-        `translate(${x(rangeEnd)-6},${this.height-this.margins.bottom})`);
+        // symbols([rangeEnd], this.symbol, 'M 0 0 12 6 0 12 3 6', 'arrowOsX', 
+        // `translate(${x(rangeEnd)-6},${this.height-this.margins.bottom})`);
 
         return x
     };
@@ -246,25 +248,25 @@ export class Visual implements IVisual {
 
     ////////////// RYSOWANIE /////////////
     //\\ GANTT
-    private gantt(x=this.dAxisX(),y=this.dAxisY()) {
-        let formatCurrency = format("$,.2f")
-        //////////// WYKONANIE //////////////////
-        // LABEL
-        labeling(this.data.items, this.label, 'plan_label_wykonanie', 
-            d => `<tspan dx=0.6em> ${Math.round(d.pct_plan*1000)/10}% ${d.task_name} (${formatCurrency(d.value_plan)})</tspan>`
-            ,
-            d => x(d.start_plan),
-            d => y(d.index*2)+y.bandwidth()/2,'','', true
-        );
-        //////////// ZAKRES //////////////////
-        // BAR
-        recting(this.data.items,
-            d => y(d.index*2),
-            x, y, this.barContainer, 'plan_bar_zakres',
-            d => (x(d.end_plan)-x(d.start_plan)),
-            d => x(d.start_plan),
-            true, true
-        );
+    // private gantt(x=this.dAxisX(),y=this.dAxisY()) {
+    //     let formatCurrency = format("$,.2f")
+    //     //////////// WYKONANIE //////////////////
+    //     // LABEL
+    //     labeling(this.data.items, this.label, 'plan_label_wykonanie', 
+    //         d => `<tspan dx=0.6em> ${Math.round(d.pct_plan*1000)/10}% ${d.task_name} (${formatCurrency(d.value_plan)})</tspan>`
+    //         ,
+    //         d => x(d.start_plan),
+    //         d => y(d.index*2)+y.bandwidth()/2,'','', true
+    //     );
+    //     //////////// ZAKRES //////////////////
+    //     // BAR
+    //     recting(this.data.items,
+    //         d => y(d.index*2),
+    //         x, y, this.barContainer, 'plan_bar_zakres',
+    //         d => (x(d.end_plan)-x(d.start_plan)),
+    //         d => x(d.start_plan),
+    //         true, true
+    //     );
         
         
         // // REAL
@@ -294,23 +296,23 @@ export class Visual implements IVisual {
         // );
  
     
-        /////////////// OKRES //////////////
-        // LINE
-        lineing ([this.data.period], this.line, 'okres1', d => x(d), 0,
-            d => x(d), this.height,'',true
-        );
-        lineing ([this.data.period], this.line, 'okres', d => x(d)-2, 0,
-            d => x(d)-2, this.height,'',true
-        );
-        // LABEL
-        let formatDay = timeFormat("%d %b %y")
-        labeling([this.data.period], this.line, "label_okres", d => formatDay(d)+'&nbsp;&nbsp;', 
-            d => x(d),
-            this.height-20//margins.top+15,
-            ,'','',true
+    //     /////////////// OKRES //////////////
+    //     // LINE
+    //     lineing ([this.data.period], this.line, 'okres1', d => x(d), 0,
+    //         d => x(d), this.height,'',true
+    //     );
+    //     lineing ([this.data.period], this.line, 'okres', d => x(d)-2, 0,
+    //         d => x(d)-2, this.height,'',true
+    //     );
+    //     // LABEL
+    //     let formatDay = timeFormat("%d %b %y")
+    //     labeling([this.data.period], this.line, "label_okres", d => formatDay(d)+'&nbsp;&nbsp;', 
+    //         d => x(d),
+    //         this.height-20//margins.top+15,
+    //         ,'','',true
 
-        );
-    };
+    //     );
+    // };
 
     private drawBarCurrency (x=this.dAxisX(), y=this.dAxisY()) {
         const formatCurrency = format("$,.2f")
@@ -435,17 +437,16 @@ export class Visual implements IVisual {
     }
 
 
-    private drawBar (className, yStart,xStart, x=this.dAxisX(), y=this.dAxisY()) {
-        const labelx = this.label.selectAll(`text.${className}`).data(this.data.items);
-        labelx.enter()
-            .append('text')
-            .text( d => `${Math.round(d.pct_real*1000)/10}% ${d.task_name} (${this.formatCurrency(d.value_fcst)})`
-            //<tspan dx=0.6em style="fill:${d.value_fcst<=d.value_plan ? 'green' : 'red'};">${formatCurrency(d.value_fcst-d.value_plan)}</tspan>`
-            )
+    private drawBar (data, className, yStart,xStart,widthBar, x=this.dAxisX(), y=this.dAxisY()) {
+        const barx = this.label.selectAll(`text.${className}`).data(this.data.items);
+        barx.enter()
+            .append('rect')
             .classed(className, true)
-            .attr('ix', (d, i) => i)
-            .attr("x", xStart)
-            .attr("y", yStart)
+            .attr('height', y.bandwidth()) // szerokość baru
+            .attr('width', widthBar)
+            .attr('y', yStart)//dataPoint => y(dataPoint.category)) // zaczynamy od jakiego punktu y
+            .attr('x', xStart) // zaczynamy od jakiego punktu x
+            .attr("filter", "url(#dropshadow)")
             .on('click', (e) => {
                 this.host.tooltipService.hide({
                     isTouchEvent: false,
@@ -464,13 +465,15 @@ export class Visual implements IVisual {
             })
             ;
         // POWTÓZENIE PRZY ODŚWIEŻENIU zmiana szerokości, wysokości okienek
-        labelx
+        barx
             .transition(this.transition)
+            .attr('height', y.bandwidth()) // szerokość baru
+            .attr('width', widthBar)
             .attr("x", xStart)
             .attr("y",yStart)
-        labelx.exit().remove();
+        barx.exit().remove();
 
-        return labelx
+        return barx
     };
 
 
