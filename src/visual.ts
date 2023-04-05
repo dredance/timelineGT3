@@ -28,7 +28,22 @@ import ISelectionManager = powerbi.extensibility.ISelectionManager
 
 
 
-import * as d3 from "d3";
+// FORMATY DEFALTU
+formatDefaultLocale({
+    "decimal": ",",
+    "thousands": " ",
+    "grouping": [3],
+    "currency": ["", " zł"]});
+timeFormatDefaultLocale({
+    "dateTime": "%d.%m.%Y",
+    "date": "%d.%m.%Y",
+    "time": "%H:%M:%S",
+    "periods": ["AM", "PM"],
+    "days": ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
+    "shortDays": ["Nd", "Pon", "Wt", "Śr", "Czw", "Pt", "Sob"],
+    "months": ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
+    "shortMonths": ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"]
+  });
 
 
 export class Visual implements IVisual {
@@ -55,6 +70,8 @@ export class Visual implements IVisual {
     private data: VData
 
     private formatCurrency: any
+    private formatDay: any
+    private classNames: string
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host
@@ -63,7 +80,9 @@ export class Visual implements IVisual {
         this.target = options.element;
         this.sm = this.host.createSelectionManager()
         this.margins = {top: 0, bottom: 20, right: 20, left: 20};
-        this.formatCurrency = format("($.2f")
+        this.formatCurrency = format("$,.2f")
+        this.formatDay = timeFormat("%d.%m.%Y")
+        this.classNames = '.bar_wykonanie, .bar_zakres, .label_wykonanie, .bar_opoznienie, .label_opoznienie, .plan_bar_zakres, .plan_label_wykonanie,.label_diff'
 
         if (document) {
             this.svg = select(this.target).append('svg')
@@ -74,24 +93,8 @@ export class Visual implements IVisual {
             this.label = this.svg.append('g');
             this.symbol = this.svg.append('g');
             this.line = this.svg.append('g');
-            console.log('1')
         }
 
-        formatDefaultLocale({
-            "decimal": ",",
-            "thousands": " ",
-            "grouping": [3],
-            "currency": ["", " zł"]});
-        timeFormatDefaultLocale({
-            "dateTime": "%d.%m.%Y",
-            "date": "%d.%m.%Y",
-            "time": "%H:%M:%S",
-            "periods": ["AM", "PM"],
-            "days": ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
-            "shortDays": ["Nd", "Pon", "Wt", "Śr", "Czw", "Pt", "Sob"],
-            "months": ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
-            "shortMonths": ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"]
-          });
 
         /////////// SHADOW ////////////
         const defs = this.svg.append("defs");
@@ -121,7 +124,7 @@ export class Visual implements IVisual {
         //// GRADIENT ////
         // Create the svg:defs element and the main gradient definition.
         var svgDefs = this.svg.append('defs');
-        let linearGradient = `<linearGradient id="mainGradient" x1="0%" y1="0%" x2="0%" y2="50%">
+        let linearGradient = `<linearGradient id="mainGradient" x1="0%" y1="0%" x2="0%" y2="120%">
                             <stop offset="0%" class="stop-left" /> 
                             <stop offset="100%" class="stop-right" />
                             </linearGradient>`;
@@ -132,12 +135,12 @@ export class Visual implements IVisual {
         // Create the svg:defs element and the main gradient definition.
         let svgDefsPatern1 = this.svg.append('defs');   /*patternTransform="rotate(45)"*/
         let paternZakres = `<pattern id="hashZakres" width="2" height="2" patternUnits="userSpaceOnUse">
-                                <rect width="1" height="2" transform="translate(0,0)" fill="rgba(33, 34, 33, 0.08)"</rect>
+                                <rect width="1" height="2" transform="translate(0,0)" fill="rgba(33, 34, 33, 0.05)"</rect>
                             </pattern>`;
         svgDefsPatern1.html(paternZakres);
         let svgDefsPatern2 = this.svg.append('defs'); 
         let paternOpoznienie = `<pattern id="hashOpoznienie" width="2" height="2" patternUnits="userSpaceOnUse">
-                                    <rect width="1" height="2" transform="translate(0,0)" fill="#ff7b336b"</rect>
+                                    <rect width="1" height="2" transform="translate(0,0)" fill="#b683686b"</rect>
                                 </pattern>`;
         svgDefsPatern2.html(paternOpoznienie);
         //////////////////
@@ -149,10 +152,9 @@ export class Visual implements IVisual {
         // // SPRAWDZENIE CZY SĄ DANE
         // if (isDataReady(options) == false) {return};
         //this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews);
-        console.log(2)
+
         //data
         this.data = transformData(options,this.host)
-        console.log(this.data)
 
         //transition
         this.transition = transition().duration(1000).ease(easeSin)
@@ -163,13 +165,60 @@ export class Visual implements IVisual {
         this.svg.attr('width', this.width).attr('height', this.height)
 
         //scales
-        this.dAxisX()
-        this.dAxisY()
+        let x= this.dAxisX()
+        let y = this.dAxisY()
 
-        //gantt
 
-        this.drawBarCurrency()
+        // OKRES //////////////
+        // LINE
+        this.lineing ([this.data.period], this.line, 'okres1', d => x(d), 0,
+            d => x(d), this.height,'',true
+        );
+        this.lineing ([this.data.period], this.line, 'okres', d => x(d)-2, 0,
+            d => x(d)-2, this.height,'',true
+        );
+        // LABEL
+        let formatDayOkres = timeFormat("%d %b %y")
+        this.drawLabel([this.data.period],"label_okres",this.height-16, d => x(d)-5, d => formatDayOkres(d))
 
+
+        // GANTT
+        ////Plan
+        this.drawBar('plan_bar_zakres',d => y(d.index*2),d => x(d.start_plan), d => (x(d.end_plan)-x(d.start_plan)))
+        this.drawLabel(this.data.items,'plan_label_wykonanie',d => y(d.index*2)+y.bandwidth()/2,d => x(d.start_plan)
+        ,d => `${Math.round(d.pct_plan*1000)/10}% ${d.task_name} (${this.formatCurrency(d.value_plan)})`)
+        ////Real
+        let real_gantt = this.drawBar('bar_zakres',d => y(d.index*2+1),d => x(d.start_curr), d => (x(d.end_plan)-x(d.start_plan)))
+        let opoz_gantt = this.drawBar('bar_opoznienie',d => y(d.index*2+1),d => x(d.end_plan), d => d.end_curr>d.end_plan ? (x(d.end_curr)-x(d.end_plan)):0)
+        let wykon_gantt = this.drawBar('bar_wykonanie',d => y(d.index*2+1),d => x(d.start_curr),d => (x(d.end_curr)-x(d.start_curr))*d.pct_real)
+
+        let opoz_gantt_label = this.drawLabel(this.data.items,'label_opoznienie', d => y(d.index*2+1)-y(1)/2+y.bandwidth()/2
+        , d => x(d.end_plan)+(x(d.end_curr)-x(d.end_plan))/2, d => this.monthDiff(d.end_plan,d.end_curr)
+        , d => d.end_curr>d.end_plan ? 'red': "green")
+        
+        let wykon_gantt_label = this.drawLabel(this.data.items,'label_wykonanie',d => y(d.index*2+1)+y.bandwidth()/2,d => x(d.start_curr)
+        ,d => `${Math.round(d.pct_real*1000)/10}% ${d.task_name} (${this.formatCurrency(d.value_fcst)})`)
+        
+        let diff_gantt_label = this.drawLabel(this.data.items,'label_diff',d => y(d.index*2+1)-y(1)/2+y.bandwidth()/2,d => x(d.end_curr)
+        , d => `${d.value_fcst>d.value_plan ? '▲': d.value_fcst<d.value_plan ? "▼":""}${this.formatCurrency(d.value_fcst-d.value_plan)}`, d => d.value_fcst>d.value_plan ? 'red': "green")
+
+        
+
+        this.tooltipServiceWrapper.addTooltip(real_gantt,
+            (d: VDataItem) => this.getTooltipData(d),
+            (d: VDataItem) =>  d.selectionId);
+        this.tooltipServiceWrapper.addTooltip(opoz_gantt,
+            (d: VDataItem) => this.getTooltipData(d),
+            (d: VDataItem) =>  d.selectionId);
+        this.tooltipServiceWrapper.addTooltip(opoz_gantt_label,
+            (d: VDataItem) => this.getTooltipData(d),
+            (d: VDataItem) => d.selectionId);
+        this.tooltipServiceWrapper.addTooltip(wykon_gantt,
+            (d: VDataItem) => this.getTooltipData(d),
+            (d: VDataItem) => d.selectionId);
+        this.tooltipServiceWrapper.addTooltip(wykon_gantt_label,
+            (d: VDataItem) => this.getTooltipData(d),
+            (d: VDataItem) => d.selectionId);
         
     };
     
@@ -239,209 +288,29 @@ export class Visual implements IVisual {
             ;
 
         // STRZAŁKI DLA OSI X
-        // symbols([rangeEnd], this.symbol, 'M 0 0 12 6 0 12 3 6', 'arrowOsX', 
-        // `translate(${x(rangeEnd)-6},${this.height-this.margins.bottom})`);
+        this.symbols([rangeEnd], this.symbol, 'M 0 0 12 6 0 12 3 6', 'arrowOsX', 
+        `translate(${x(rangeEnd)-6},${this.height-this.margins.bottom})`);
 
         return x
     };
-
-
-    ////////////// RYSOWANIE /////////////
-    //\\ GANTT
-    // private gantt(x=this.dAxisX(),y=this.dAxisY()) {
-    //     let formatCurrency = format("$,.2f")
-    //     //////////// WYKONANIE //////////////////
-    //     // LABEL
-    //     labeling(this.data.items, this.label, 'plan_label_wykonanie', 
-    //         d => `<tspan dx=0.6em> ${Math.round(d.pct_plan*1000)/10}% ${d.task_name} (${formatCurrency(d.value_plan)})</tspan>`
-    //         ,
-    //         d => x(d.start_plan),
-    //         d => y(d.index*2)+y.bandwidth()/2,'','', true
-    //     );
-    //     //////////// ZAKRES //////////////////
-    //     // BAR
-    //     recting(this.data.items,
-    //         d => y(d.index*2),
-    //         x, y, this.barContainer, 'plan_bar_zakres',
-    //         d => (x(d.end_plan)-x(d.start_plan)),
-    //         d => x(d.start_plan),
-    //         true, true
-    //     );
-        
-        
-        // // REAL
-        // recting(this.data.items,
-        //     d => y(d.index*2+1),
-        //     x, y, this.barContainer, 'bar_wykonanie',
-        //     d => (x(d.end_curr)-x(d.start_curr))*d.pct_real,
-        //     d => x(d.start_curr),
-        //     false, true
-        // );
-        // LABEL
-        // labeling(this.data.items, this.label, 'label_wykonanie', 
-        //     d => `<tspan dx=0.6em> ${Math.round(d.pct_real*1000)/10}% ${d.task_name} (${formatCurrency(d.value_fcst)})</tspan>
-        //     <tspan dx=0.6em style="fill:${d.value_fcst<=d.value_plan ? 'green' : 'red'};">${formatCurrency(d.value_fcst-d.value_plan)}</tspan>`
-        //     ,
-        //     d => x(d.start_curr),
-        //     d => y(d.index*2+1)+y.bandwidth()/2,'','', true
-        // );
-        // //////////// ZAKRES //////////////////
-        // // BAR
-        // recting(this.data.items,
-        //     d => y(d.index*2+1),
-        //     x, y, this.barContainer, 'bar_zakres',
-        //     d => (x(d.end_curr)-x(d.start_curr)),
-        //     d => x(d.start_curr),
-        //     true, true
-        // );
  
-    
-    //     /////////////// OKRES //////////////
-    //     // LINE
-    //     lineing ([this.data.period], this.line, 'okres1', d => x(d), 0,
-    //         d => x(d), this.height,'',true
-    //     );
-    //     lineing ([this.data.period], this.line, 'okres', d => x(d)-2, 0,
-    //         d => x(d)-2, this.height,'',true
-    //     );
-    //     // LABEL
-    //     let formatDay = timeFormat("%d %b %y")
-    //     labeling([this.data.period], this.line, "label_okres", d => formatDay(d)+'&nbsp;&nbsp;', 
-    //         d => x(d),
-    //         this.height-20//margins.top+15,
-    //         ,'','',true
-
-    //     );
-    // };
-
-    private drawBarCurrency (x=this.dAxisX(), y=this.dAxisY()) {
-        const formatCurrency = format("$,.2f")
-        // DEFINOWANIE 
-        const barRange = this.barContainer.selectAll('rect.bar_zakres').data(this.data.items);
-        // TWORZENIE 
-        barRange.enter().append('rect')
-            .classed('bar_zakres', true)
-            .attr('ix', (d, i) => i)
-            .attr('height', y.bandwidth()) // szerokość baru
-            .attr('width', d => (x(d.end_curr)-x(d.start_curr)))
-            .attr('y', d => y(d.index*2+1))//dataPoint => y(dataPoint.category)) // zaczynamy od jakiego punktu y
-            .attr('x', d => x(d.start_curr)) // zaczynamy od jakiego punktu x
-            .attr("filter", "url(#dropshadow)")
-            .on('click', (e) => {
-                const el = select(e.target)
-                const d = <{selectionId: ISelectionId}>el.data()[0]
-                const ix = el.attr('ix')
-                this.sm.select(d.selectionId).then((selected) => {
-                    selectAll('.bar_wykonanie, .bar_zakres, .label_wykonanie, .plan_bar_zakres, .plan_label_wykonanie')//`.${el.attr('class')}`)
-                        .style('fill-opacity', selected.length > 0 ? 0.25 : 1)
-                        .style('stroke-opacity', selected.length > 0 ? 0.25 : 1)
-                    selectAll(`[ix='${ix}']`).style('stroke-opacity', 1)
-                        .style('fill-opacity', 1)
-                })
-            })
-
-        // POWTÓRZENIE PRZY UPDATE
-        barRange.transition(this.transition)
-        .attr('height', y.bandwidth()) // szerokość baru
-        .attr('width', d => (x(d.end_curr)-x(d.start_curr)))
-        .attr('y', d => y(d.index*2+1))//dataPoint => y(dataPoint.category)) // zaczynamy od jakiego punktu y
-        .attr('x', d => x(d.start_curr)) // zaczynamy od jakiego punktu x
-        barRange.exit().remove();
-
-        // DEFINOWANIE PASKU WYKONANIA
-        const barWykon = this.barContainer.selectAll('rect.bar_wykonanie').data(this.data.items);
-        // TWORZENIE 
-        barWykon.enter().append('rect')
-            .classed('bar_wykonanie', true)
-            .attr('ix', (d, i) => i)
-            .attr('height', y.bandwidth()) // szerokość baru
-            .attr('width', d => (x(d.end_curr)-x(d.start_curr))*d.pct_real)
-            .attr('y', d => y(d.index*2+1))//dataPoint => y(dataPoint.category)) // zaczynamy od jakiego punktu y
-            .attr('x', d => x(d.start_curr)) // zaczynamy od jakiego punktu x
-            .attr("filter", "url(#dropshadow)")
-            .on('click', (e) => {
-                const el = select(e.target)
-                const d = <{selectionId: ISelectionId}>el.data()[0]
-                const ix = el.attr('ix')
-                this.sm.select(d.selectionId).then((selected) => {
-                    selectAll('.bar_wykonanie, .bar_zakres, .label_wykonanie, .plan_bar_zakres, .plan_label_wykonanie')//`.${el.attr('class')}`)
-                        .style('fill-opacity', selected.length > 0 ? 0.25 : 1)
-                        .style('stroke-opacity', selected.length > 0 ? 0.25 : 1)
-                    selectAll(`[ix='${ix}']`).style('stroke-opacity', 1)
-                        .style('fill-opacity', 1)
-                })
-            })
-            ;
-        // POWTÓRZENIE PRZY UPDATE
-        barWykon.transition(this.transition)
-        .attr('height', y.bandwidth()) // szerokość baru
-        .attr('width', d => (x(d.end_curr)-x(d.start_curr))*d.pct_real)
-        .attr('y', d => y(d.index*2+1))//dataPoint => y(dataPoint.category)) // zaczynamy od jakiego punktu y
-        .attr('x', d => x(d.start_curr)) // zaczynamy od jakiego punktu x
-        barWykon.exit().remove();
-        
-
-        // DEFINOWANIE LABEL WYKONANIA
-        //data, labelContainer, className, text, xPoint, yPoint, fill? ,sizeBold?, animate?, transform?) {
-        const labelx = this.label.selectAll("text.label_wykonanie").data(this.data.items);
-        labelx.enter()
-            .append('text')
-            .text( d => `${Math.round(d.pct_real*1000)/10}% ${d.task_name} (${formatCurrency(d.value_fcst)})`
-            //<tspan dx=0.6em style="fill:${d.value_fcst<=d.value_plan ? 'green' : 'red'};">${formatCurrency(d.value_fcst-d.value_plan)}</tspan>`
-            )
-            .classed('label_wykonanie', true)
-            .attr('ix', (d, i) => i)
-            .attr("x", d => x(d.start_curr))
-            .attr("y", d => y(d.index*2+1)+y.bandwidth()/2)
-            .on('click', (e) => {
-                const el = select(e.target)
-                const d = <{selectionId: ISelectionId}>el.data()[0]
-                const ix = el.attr('ix')
-                this.sm.select(d.selectionId).then((selected) => {
-                    selectAll('.bar_wykonanie, .bar_zakres, .label_wykonanie, .plan_bar_zakres, .plan_label_wykonanie')//`.${el.attr('class')}`)
-                        .style('fill-opacity', selected.length > 0 ? 0.25 : 1)
-                        .style('stroke-opacity', selected.length > 0 ? 0.25 : 1)
-                    selectAll(`[ix='${ix}']`).style('stroke-opacity', 1)
-                        .style('fill-opacity', 1)
-                })
-            })
-            ;
-        // POWTÓZENIE PRZY ODŚWIEŻENIU zmiana szerokości, wysokości okienek
-        labelx
-            .transition(this.transition)
-            .attr("x", d => x(d.start_curr))
-            .attr("y", d => y(d.index*2+1)+y.bandwidth()/2)
-        labelx.exit().remove();
-
-        this.tooltipServiceWrapper.addTooltip(barRange,
-            (d: VDataItem) => this.getTooltipData(d),
-            (d: VDataItem) =>  d.selectionId);
-        this.tooltipServiceWrapper.addTooltip(barWykon,
-            (d: VDataItem) => this.getTooltipData(d),
-            (d: VDataItem) => d.selectionId);
-        this.tooltipServiceWrapper.addTooltip(labelx,
-            (d: VDataItem) => this.getTooltipData(d),
-            (d: VDataItem) => d.selectionId);
-
-
-        return barRange;
-    };
 
     private getTooltipData(d: any): VisualTooltipDataItem[] {
         return [{
             displayName: d.task_name,
-            value: d.value_plan.toString(),
+            value: this.formatCurrency(d.value_fcst),
             color: d.color,
-            header: 'ToolTip Title'
+            header: ''
         }];
     }
 
 
-    private drawBar (data, className, yStart,xStart,widthBar, x=this.dAxisX(), y=this.dAxisY()) {
-        const barx = this.label.selectAll(`text.${className}`).data(this.data.items);
+    private drawBar (className,yStart,xStart,widthBar, x=this.dAxisX(), y=this.dAxisY()) {
+        const barx = this.barContainer.selectAll(`rect.${className}`).data(this.data.items);
         barx.enter()
             .append('rect')
             .classed(className, true)
+            .attr('ix', (d, i) => i)
             .attr('height', y.bandwidth()) // szerokość baru
             .attr('width', widthBar)
             .attr('y', yStart)//dataPoint => y(dataPoint.category)) // zaczynamy od jakiego punktu y
@@ -452,11 +321,11 @@ export class Visual implements IVisual {
                     isTouchEvent: false,
                     immediately: true
                 });
-                const el = select(e.target)
+                const el = select("."+className+`[ix='${e.index}']`)
                 const d = <{selectionId: ISelectionId}>el.data()[0]
                 const ix = el.attr('ix')
                 this.sm.select(d.selectionId).then((selected) => {
-                    selectAll('.bar_wykonanie, .bar_zakres, .label_wykonanie, .plan_bar_zakres, .plan_label_wykonanie')//`.${el.attr('class')}`)
+                    selectAll(this.classNames)
                         .style('fill-opacity', selected.length > 0 ? 0.25 : 1)
                         .style('stroke-opacity', selected.length > 0 ? 0.25 : 1)
                     selectAll(`[ix='${ix}']`).style('stroke-opacity', 1)
@@ -477,27 +346,26 @@ export class Visual implements IVisual {
     };
 
 
-    private drawLabel (className, yStart,xStart, x=this.dAxisX(), y=this.dAxisY()) {
-        const labelx = this.label.selectAll(`text.${className}`).data(this.data.items);
+    private drawLabel (data, className, yStart,xStart,text,color?, x=this.dAxisX(), y=this.dAxisY()) {
+        const labelx = this.label.selectAll(`text.${className}`).data(data);
         labelx.enter()
             .append('text')
-            .text( d => `${Math.round(d.pct_real*1000)/10}% ${d.task_name} (${this.formatCurrency(d.value_fcst)})`
-            //<tspan dx=0.6em style="fill:${d.value_fcst<=d.value_plan ? 'green' : 'red'};">${formatCurrency(d.value_fcst-d.value_plan)}</tspan>`
-            )
+            .text(text)
             .classed(className, true)
             .attr('ix', (d, i) => i)
             .attr("x", xStart)
             .attr("y", yStart)
+            .style("fill", color? color: "")
             .on('click', (e) => {
                 this.host.tooltipService.hide({
                     isTouchEvent: false,
                     immediately: true
                 });
-                const el = select(e.target)
+                const el = select("."+className+`[ix='${e.index}']`)
                 const d = <{selectionId: ISelectionId}>el.data()[0]
                 const ix = el.attr('ix')
                 this.sm.select(d.selectionId).then((selected) => {
-                    selectAll('.bar_wykonanie, .bar_zakres, .label_wykonanie, .plan_bar_zakres, .plan_label_wykonanie')//`.${el.attr('class')}`)
+                    selectAll(this.classNames)//`.${el.attr('class')}`)
                         .style('fill-opacity', selected.length > 0 ? 0.25 : 1)
                         .style('stroke-opacity', selected.length > 0 ? 0.25 : 1)
                     selectAll(`[ix='${ix}']`).style('stroke-opacity', 1)
@@ -508,11 +376,91 @@ export class Visual implements IVisual {
         // POWTÓZENIE PRZY ODŚWIEŻENIU zmiana szerokości, wysokości okienek
         labelx
             .transition(this.transition)
+            .text(text)
             .attr("x", xStart)
             .attr("y",yStart)
+            .style("fill", color? color: "")
+
         labelx.exit().remove();
 
         return labelx
     };
+
+    private lineing (data, lineContainer, className, x1, y1, x2, y2, fill?, animate?) {
+        const linex = lineContainer
+            .selectAll('line.'+className)
+            .data(data)
+            ;
+        linex.enter()
+            .append('line')
+            .classed(className, true)
+            .attr('x1', x1)
+            .attr('y1', y1)
+            .attr('x2', x2)
+            .attr('y2', y2)
+            .attr('stroke', fill)
+            ;
+        // Powtórzenie
+        if (animate) {
+            linex.transition()
+            .ease(easeSin)
+            .duration(1000)
+            .attr("x1",x1)
+            .attr("x2",x2)
+            .attr('y1', y1)
+            .attr('y2', y2)
+            .attr('stroke', fill)
+        } else {
+            linex.attr('x1', x1)
+            .attr('y1', y1)
+            .attr('x2', x2)
+            .attr('y2', y2)
+            .attr('stroke', fill)
+            ;
+        };
+        linex.exit().remove();
+        return linex;
+    };
+    
+    private symbols (dane, symbolContainer, mPatch, className, transform, fill?, animate?, strokeColor?) {
+        const sym = symbolContainer
+        .selectAll('path.'+className)
+        .data(dane);
+        sym.enter()
+        .append("path") 
+        .attr("d", mPatch) 
+        .classed(className, true)
+        .style('fill', fill)
+        .attr("transform", transform)
+        .style('stroke',strokeColor);
+        if (animate) {
+            sym.transition()
+            .ease(easeSin)
+            .duration(1000)
+            .attr("d", mPatch) 
+            .attr("transform", transform)
+            .style('fill', fill)
+            .style('stroke',strokeColor);
+        } else {
+            sym.attr("d", mPatch) 
+            .style('fill', fill)
+            .attr("transform", transform)
+            .style('stroke',strokeColor);
+        };
+        sym.exit().remove()
+    };
+
+
+    private monthDiff(dateFrom:Date, dateTo:Date) {
+        return dateTo>dateFrom ? 
+            dateTo.getMonth() - dateFrom.getMonth() + 
+            (12 * (dateTo.getFullYear() - dateFrom.getFullYear())) + ' mc'
+        : ""
+       }
+
+
+
+
+
 
 };

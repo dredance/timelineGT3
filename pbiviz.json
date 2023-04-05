@@ -1,0 +1,25 @@
+{
+    "visual": {
+        "name": "timelineGT3",
+        "displayName": "timelineGT3",
+        "guid": "timelineGT3A898A37182DC454FB66D71D74C927C9D",
+        "visualClassName": "Visual",
+        "version": "1.0.0",
+        "description": "gs",
+        "supportUrl": "gs",
+        "gitHubUrl": "gs"
+    },
+    "apiVersion": "3.2.0",
+    "author": {
+        "name": "gs",
+        "email": "gs"
+    },
+    "assets": {
+        "icon": "assets/icon.png"
+    },
+    "externalJS": [],
+    "style": "style/visual.less",
+    "capabilities": "capabilities.json",
+    "dependencies": null,
+    "stringResources": []
+}

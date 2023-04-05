@@ -1,15 +1,17 @@
 // oś X
+
+.axisX1MonthsTag,.axisX2MonthsTag {
+    color: rgb(131, 130, 130);
+    stroke-width:2.0;
+}
+
 .tick text {
     font-size: 0.7em;
     font-weight: 500;
     font-style: italic;
     color: rgba(0, 0, 0, 0.849);
 }
-.xAxis, .xAxis2{
-    color: rgb(131, 130, 130);
-    stroke-width:2.0;
-}
-.arrowOsX1, .arrowOsX2{
+ .arrowOsX {
     fill:rgb(138, 134, 134);
     stroke:rgb(138, 134, 134);
     stroke-width:0.7;
@@ -62,9 +64,10 @@
 }
 
 .plan_label_wykonanie {
-    font-size: 0.5em;
+    font-size: 0.45em;
     fill: rgba(0, 0, 0, 0.345);
     font-weight: bold;
+    transform: translateY(0.3em);
 }
 .bar_zakres {
     fill:url(#hashZakres);
@@ -80,13 +83,11 @@
 }
 
 .label_wykonanie {
-    font-size: 0.5em;
+    font-size: 0.45em;
     //fill: rgb(0, 0, 0);
     font-weight: bold;
+    transform: translateY(0.3em);
 }
-
-
-
 
 
 
@@ -97,19 +98,29 @@
 }
 
 .bar_opoznienie {
-    fill: url(#hashOpoznienie);
-    stroke:  rgba(85, 4, 4, 0.3);
-    // stroke-dasharray: 3;
+    fill: url(#hashZakres);
+    stroke:  rgba(79, 65, 65, 0.338);
+    stroke-dasharray: 3;
     stroke-linecap: butt;
     stroke-width: 1;
 }
 .label_opoznienie {
     text-anchor: middle;
     font-weight: bold;
-    fill: rgb(17, 1, 1);
-    font-size: 0.5em;
+    fill: rgba(42, 3, 3, 0.584);
+    font-size: 0.48em;
+    transform: translateY(0.45em);
+    
 }
 
+
+
+.label_diff{
+    font-weight: bold;
+    font-size: 0.44em;
+    transform: translate(0.5em,0.5em);
+    //transform: translateY(0.3em);
+}
 
 .label_opis {
 
